@@ -11,6 +11,7 @@ import configparser
 import os
 import sys
 import csv
+import time
 
 
 
@@ -24,11 +25,13 @@ if not os.path.exists(CONFIG_FILE):
         config.write(f)
 
 #Save path for Uplad svg
-def save_upload_svg_path(uploaded_svg_file_path):
+def save_image_database(image_database_path):
     config.read(CONFIG_FILE)
-    if 'Path_upload_svg' not in config:
-        config['Path_upload_svg'] = {}
-    config['Path_upload_svg']['uploaded_svg_file_path'] = uploaded_svg_file_path
+    if 'Image_database_path' not in config:
+        config['Image_database_path'] = {}
+    if 'image_database_path' in config['Image_database_path']:
+        del config['Image_database_path']['image_database_path']
+    config['Image_database_path']['image_database_path'] = image_database_path
     with open(CONFIG_FILE, 'w') as f:
         config.write(f)
 
@@ -36,6 +39,8 @@ def save_upload_debug_path(upload_debug_file_path):
     config.read(CONFIG_FILE)
     if 'Path_upload_debug_file' not in config:
         config['Path_upload_debug_file'] = {}
+    if 'upload_debug_file_path' in config['Path_upload_debug_file']:
+        del config['Path_upload_debug_file']['upload_debug_file_path']
     config['Path_upload_debug_file']['upload_debug_file_path'] = upload_debug_file_path
     with open(CONFIG_FILE, 'w') as f:
         config.write(f)
@@ -44,6 +49,8 @@ def save_export_all_path(export_all_file_path):
     config.read(CONFIG_FILE)
     if 'Export_all_file_path' not in config:
         config['Export_all_file_path'] = {}
+    if 'export_all_file_path' in config['Export_all_file_path']:
+        del config['Export_all_file_path']['export_all_file_path']
     config['Export_all_file_path']['export_all_file_path'] = export_all_file_path
     with open(CONFIG_FILE, 'w') as f:
         config.write(f)
@@ -52,8 +59,12 @@ def save_upload_combine_svg_path(upload_combine_svg_paths):
     config.read(CONFIG_FILE)
     if 'Path_upload_combine_svg' not in config:
         config['Path_upload_combine_svg'] = {}
+    for key in list(config['Path_upload_combine_svg']):
+        if key.startswith('upload_combine_svg_path_'):
+            del config['Path_upload_combine_svg'][key]
     for idx, path in enumerate(upload_combine_svg_paths):
         config['Path_upload_combine_svg'][f'upload_combine_svg_path_{idx}'] = path
+    
     with open(CONFIG_FILE, 'w') as f:
         config.write(f)
 
@@ -61,6 +72,9 @@ def save_upload_combine_xml_path(upload_combine_xml_path):
     config.read(CONFIG_FILE)
     if 'Path_upload_combine_xml' not in config:
         config['Path_upload_combine_xml'] = {}
+    for key in list(config['Path_upload_combine_xml']):
+        if key.startswith('upload_combine_xml_path_'):
+            del config['Path_upload_combine_xml'][key]
     for idx, path in enumerate(upload_combine_xml_path):
         config['Path_upload_combine_xml'][f'upload_combine_xml_path_{idx}'] = path
     with open(CONFIG_FILE, 'w') as f:
@@ -70,6 +84,9 @@ def save_ready_graphic_file_path(ready_graphic_file_path):
     config.read(CONFIG_FILE)
     if 'Path_ready_graphic_file' not in config:
         config['Path_ready_graphic_file'] = {}
+    for key in list(config['Path_ready_graphic_file']):
+        if key.startswith('ready_graphic_file_path_'):
+            del config['Path_ready_graphic_file'][key]
     for idx, path in enumerate(ready_graphic_file_path):
         config['Path_ready_graphic_file'][f'ready_graphic_file_path_{idx}'] = path
     with open(CONFIG_FILE, 'w') as f:
@@ -79,6 +96,9 @@ def save_ready_as_file_path(ready_as_file_path):
     config.read(CONFIG_FILE)
     if 'Path_ready_as_file' not in config:
         config['Path_ready_as_file'] = {}
+    for key in list(config['Path_ready_as_file']):
+        if key.startswith('ready_as_file_path_'):
+            del config['Path_ready_as_file'][key]
     for idx, path in enumerate(ready_as_file_path):
         config['Path_ready_as_file'][f'ready_as_file_path_{idx}'] = path
     with open(CONFIG_FILE, 'w') as f:
@@ -86,7 +106,7 @@ def save_ready_as_file_path(ready_as_file_path):
 
 
 
-def read_upload_svg(key='Path_upload_svg', subkey='uploaded_svg_file_path'):
+def read_image_database(key='Image_database_path', subkey='image_database_path'):
     if key in config:
         if subkey in config[key]:
             return config[key][subkey]
@@ -154,48 +174,68 @@ def read_ready_as_file_path(key='Path_ready_as_file', subkey='ready_as_file_path
     return []  
 
 #BACKEND AND FUNCTIONS=============================================
-
-def upload_svg():
-    file_path = filedialog.askopenfilename(filetypes=[("SVG files", "*.svg")])
-    if file_path:
-        # Save the selected file path to the config file for uploading SVG files
-        save_upload_svg_path(file_path)
+def select_image_database():
+    folder_path = filedialog.askdirectory()
+    if folder_path:
+        # Save the selected folder path to the config file for saving report files
+        save_image_database(folder_path)
+        print(f"Selected {folder_path} for image database")
+    else:
+        print(f"Not selected database!")
 
 def upload_debug():
     file_path = filedialog.askopenfilename(filetypes=[("debug files", "*.debug")])
     if file_path:
         # Save the selected file path to the config file for uploading SVG files
         save_upload_debug_path(file_path)
+        print(f"Selected AS (.debug) file {file_path} is ready to read and search.")
+    else:
+        print(f"Not selected AS file!")
 
 def export_all():
     folder_path = filedialog.askdirectory()
     if folder_path:
         # Save the selected folder path to the config file for saving report files
         save_export_all_path(folder_path)
+        print(f"Selected {folder_path} for saving exports.")
+    else:
+        print(f"Not selected export path!")
 
 def upload_combine_svg():
     file_paths = filedialog.askopenfilenames(filetypes=[("SVG files", "*.svg")])
     if file_paths:
         # Save the selected file paths to the config file for uploading SVG files
         save_upload_combine_svg_path(list(file_paths))  # Convert file_paths tuple to list
+        print(f"Selected Graphics files {file_paths}")
+    else:
+        print("Not selected Graphics files!")
 
 def upload_combine_xml():
     file_paths = filedialog.askopenfilenames(filetypes=[("xml files", "*.xml")])
     if file_paths:
         # Save the selected file paths to the config file for uploading SVG files
         save_upload_combine_xml_path(list(file_paths))  # Convert file_paths tuple to list
+        print(f"Selected AS (.debug) files {file_paths} are ready to merge.")
+    else:
+        print(f"Not selected AS files for merging!")
 
 def upload_ready_graphic_file():
     file_paths = filedialog.askopenfilenames(filetypes=[("xml files", "*.xml")])
     if file_paths:
         # Save the selected file paths to the config file for uploading SVG files
         save_ready_graphic_file_path(list(file_paths))  # Convert file_paths tuple to list
+        print(f"Selected Graphics files {file_paths} are ready to export as 'report files'")
+    else:
+        print(f"Not selected Graphic files for report")
 
 def upload_ready_as_file():
     file_paths = filedialog.askopenfilenames(filetypes=[("xml files", "*.xml")])
     if file_paths:
         # Save the selected file paths to the config file for uploading SVG files
         save_ready_as_file_path(list(file_paths))  # Convert file_paths tuple to list
+        print(f"Selected AS files {file_paths} are ready to export as 'report files'")
+    else:
+        print(f"Not selected AS files for report")
 
 #LOGS ===========================================================
 class PrintLogger:
@@ -230,6 +270,9 @@ def on_focusout(event):
         regex_input.config(foreground='grey')
 
 #MAIN Functions===================================================
+
+def check_button_state():
+    return button_state_var.get()
 
 def extract_program_signals():
     try:
@@ -276,11 +319,15 @@ def extract_program_signals():
         # Join the extracted sections into a single string
         extracted_content = "\n".join(extracted_sections)
 
-        # Write the extracted content to a new text file
-        with open(output_file_path, 'w', encoding='utf-8') as output_file:
-            output_file.write(extracted_content)
+        button_state = check_button_state()  # This should be replaced with the actual function or variable check
 
-        print(f'Extracted sections saved to: {output_file_path}')
+        if button_state:
+            with open(output_file_path, 'w', encoding='utf-8') as output_file:
+                output_file.write(extracted_content)
+
+            print(f'Extracted sections saved to: {output_file_path}')
+        else:
+            print('Button state is not true. Skipping file write.')
 
     except ET.ParseError as e:
         print(f'Error parsing XML: {e}')
@@ -499,7 +546,9 @@ def compare_lines_and_write_to_csv():
 
 def create_image_from_svg():
     current_date = datetime.now().strftime("%Y-%m-%d")
+    database = read_image_database()
     output_file_path = read_export_all()+"/"+f"Output_Image_{current_date}.png"
+
 
         # Open a file dialog to select the SVG file
     file_path = filedialog.askopenfilename(filetypes=[("SVG files", "*.svg")])
@@ -529,7 +578,7 @@ def create_image_from_svg():
                 symbol_ref = line[start_index:end_index]
                 symbol_ref = symbol_ref[8:]  # Remove the first backslash
                 symbol_ref = symbol_ref.replace("\\", "\\Symbols\\", 1)  # Add 'Symbols\\' after the second '\\'
-                symbol_ref = "Database\\" + symbol_ref.replace("/", "\\")  # Replace forward slashes with backslashes
+                symbol_ref = database+"\\"+ symbol_ref.replace("/", "\\")  # Replace forward slashes with backslashes
                 symbol_ref += ".png"  # Append ".png"
                 
                 # Extract x and y coordinates if available
@@ -638,6 +687,8 @@ menu_bar.add_cascade(label="Export", command=export_all)
 
 menu_bar.add_cascade(label="Info",command=info)
 
+menu_bar.add_cascade(label="Select image Database",command=select_image_database)
+
 menu_bar.add_cascade(label="Help")
 
 root.config(menu=menu_bar)
@@ -689,27 +740,33 @@ regex_input.bind('<FocusIn>', on_entry_click)
 regex_input.bind('<FocusOut>', on_focusout)
 
 #BUTTONS=====================================================
+
 # Button Check
-check_file = ttk.Button(root,text="Extract AS signals",command=extract_program_signals)
-check_file.place(x=10,y=360,width=190)
+check_file = ttk.Button(root,text="Check / Save AS",command=extract_program_signals)
+check_file.place(x=100,y=360,width=100)
 
 # Button auto correct
-combine_xml = ttk.Button(root,text="Combine AS signals",command=combine_xml_values)
+combine_xml = ttk.Button(root,text="Merge / Save AS",command=combine_xml_values)
 combine_xml.place(x=10,y=390,width=190)
 
 # Button Check
-combine_svg = ttk.Button(root,text="Extract & Combine Graphic signals",command=extract_and_combine_svg)
+combine_svg = ttk.Button(root,text="Merge / Save Graphics",command=extract_and_combine_svg)
 combine_svg.place(x=200,y=360,width=190)
 
 # Button auto correct
-combine_signals = ttk.Button(root,text="Compare Datapoints & print report",command=compare_lines_and_write_to_csv)
+combine_signals = ttk.Button(root,text="Compare -> Save",command=compare_lines_and_write_to_csv)
 combine_signals.place(x=200,y=390,width=190)
 
 clear_log_button = ttk.Button(root, text="Clear Logs", command=clear_logs)
 clear_log_button.place(x=390, y=390,width=190)
 
-clear_log_button = ttk.Button(root, text="Create image from svg", command=create_image_from_svg)
-clear_log_button.place(x=390, y=360,width=190)
+create_image_button = ttk.Button(root, text="Create image from svg", command=create_image_from_svg)
+create_image_button.place(x=390, y=360,width=190)
+
+button_state_var = tk.BooleanVar()
+
+check_button = tk.Checkbutton(root, text="Save to File", variable=button_state_var,bg='#e1e1e1',bd=2, relief="groove")
+check_button.place(x=10,y=360)
 
 frame = ttk.Frame(root)
 frame.place(x=10,y=105,width=570,height=150)
@@ -725,5 +782,36 @@ label_widget.pack(side=tk.BOTTOM, fill=tk.X)
 # Instantiate PrintLogger and redirect stdout
 print_logger = PrintLogger(text_widget, label_widget)
 sys.stdout = print_logger
+
+class Tooltip:
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+        self.widget.bind("<Enter>", self.enter)
+        self.widget.bind("<Leave>", self.leave)
+
+    def enter(self, event=None):
+        x = y = 0
+        x, y, _, _ = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 25
+
+        self.tooltip = tk.Toplevel(self.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{x}+{y}")
+        
+        label = tk.Label(self.tooltip, text=self.text, background="#FFFFE0", relief="solid", borderwidth=1)
+        label.pack(ipadx=1)
+
+    def leave(self, event=None):
+        if self.tooltip:
+            self.tooltip.destroy()
+
+Tooltip(check_file, "Check the loaded AS .debug file for lines \r matching a specific regular expression pattern.\r If the 'Save to File' option is selected,\r automatically create a file containing \r the found and extracted data points.")
+Tooltip(combine_xml, "Merge the XML files created from debug files \r The goal is to create a single file containing \r all data points extracted from these XML files.")
+Tooltip(combine_svg, "Read from uploaded Graphics \r SVG file or files and merge all data points \r used in the SVG into one XML file.")
+Tooltip(create_image_button, "Load SVG file to create a image")
+Tooltip(combine_signals, "Read from Upladed Graphis file & AS file \r compare and create CSV report.")
 
 root.mainloop() 
